@@ -46,3 +46,11 @@ class Message(Base):
     conversation: Mapped["Conversation"] = relationship(
         back_populates="messages"
     )
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String(50))
+    product: Mapped[str] = mapped_column(String(255))

@@ -7,6 +7,8 @@ from app.db.database import get_db
 from app.db.models import Conversation, Message
 from app.services.llm import generate_response
 
+from app.services.tools import get_order
+
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
@@ -62,7 +64,10 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         )
 
     # 5. Send conversation history to Gemini
-    response = generate_response(conversation_text)
+    response = generate_response(
+    conversation_text,
+    db,
+    )
 
     # 6. Save the assistant's response
     assistant_message = Message(
@@ -79,3 +84,10 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         "response": response
     }
 
+
+@router.get("/test-order/{order_id}")
+def test_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+):
+    return get_order(order_id, db)
