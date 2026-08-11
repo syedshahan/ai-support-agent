@@ -1,0 +1,31 @@
+import os
+
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+
+from app.agent.state import AgentState
+from app.agent.tools import get_order
+
+
+load_dotenv()
+
+api_key = os.getenv("GEMINI_API_KEY")
+
+if not api_key:
+    raise ValueError("GEMINI_API_KEY is not set")
+
+
+llm = ChatGoogleGenerativeAI(
+    model="gemini-3.6-flash",
+    google_api_key=api_key,
+)
+
+llm_with_tools = llm.bind_tools([get_order])
+
+
+def call_llm(state: AgentState):
+    response = llm_with_tools.invoke(state["messages"])
+
+    return {
+        "messages": [response]
+    }
