@@ -2,7 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import DocumentChunk
-from app.services.embeddings import generate_embedding
+from app.rag.embeddings import generate_embedding
 
 
 def search_similar_chunks(

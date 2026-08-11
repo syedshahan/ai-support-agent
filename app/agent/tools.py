@@ -62,3 +62,36 @@ def get_refund_policy():
             "of receiving their order."
         )
     }
+
+@tool
+def search_knowledge(question: str):
+    """Search company documents for information relevant to the user's question."""
+
+    db = SessionLocal()
+
+    try:
+        from app.services.retrieval import search_similar_chunks
+
+        chunks = search_similar_chunks(
+            db=db,
+            query=question,
+            limit=3,
+        )
+
+        if not chunks:
+            return {
+                "error": "No relevant information found."
+            }
+
+        return {
+            "results": [
+                {
+                    "source": chunk.source,
+                    "content": chunk.content,
+                }
+                for chunk in chunks
+            ]
+        }
+
+    finally:
+        db.close()

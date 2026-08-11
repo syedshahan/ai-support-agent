@@ -7,6 +7,7 @@ from app.agent.tools import (
     get_customer,
     get_order,
     get_refund_policy,
+    search_knowledge
 )
 
 
@@ -28,6 +29,7 @@ tool_node = ToolNode(
         get_order,
         get_customer,
         get_refund_policy,
+        search_knowledge
     ]
 )
 

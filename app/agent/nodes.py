@@ -8,6 +8,7 @@ from app.agent.tools import (
     get_customer,
     get_order,
     get_refund_policy,
+    search_knowledge,
 )
 
 load_dotenv()
@@ -27,6 +28,7 @@ llm_with_tools = llm.bind_tools(
         get_order,
         get_customer,
         get_refund_policy,
+        search_knowledge
     ]
 )
 
