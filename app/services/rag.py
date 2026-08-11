@@ -1,10 +1,9 @@
 from sqlalchemy.orm import Session
 
-from app.services.llm import generate_response
 from app.services.retrieval import search_similar_chunks
 
 
-def generate_rag_response(
+def get_rag_context(
     db: Session,
     question: str,
 ) -> str:
@@ -15,21 +14,7 @@ def generate_rag_response(
         limit=3,
     )
 
-    context = "\n\n".join(
+    return "\n\n".join(
         chunk.content
         for chunk in chunks
     )
-
-    prompt = f"""
-Answer the user's question using the provided context.
-
-Context:
-{context}
-
-User question:
-{question}
-
-If the answer cannot be found in the context, say you don't know.
-"""
-
-    return generate_response(prompt, db)

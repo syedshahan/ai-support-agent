@@ -2,12 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from app.agent.graph import graph
 
 from app.db.database import get_db
 from app.db.models import Conversation, Message
-from app.services.llm import generate_response
-
-from app.services.tools import get_order
 
 
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -46,34 +44,39 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     db.add(user_message)
     db.commit()
 
-    # 3. Load previous conversation messages
-    statement = (
-        select(Message)
-        .where(Message.conversation_id == conversation.id)
-        .order_by(Message.id)
+    # 3. Load conversation history
+    from app.services.memory import load_conversation_messages
+
+    messages = load_conversation_messages(
+        conversation.id,
+        db,
     )
 
-    messages = db.execute(statement).scalars().all()
-
-    # 4. Build conversation context for Gemini
-    conversation_text = ""
-
-    for message in messages:
-        conversation_text += (
-            f"{message.role.capitalize()}: {message.content}\n"
-        )
-
-    # 5. Send conversation history to Gemini
-    response = generate_response(
-    conversation_text,
-    db,
+    # 4. Run LangGraph
+    result = graph.invoke(
+        {
+            "messages": messages,
+            "conversation_id": conversation.id,
+        }
     )
 
-    # 6. Save the assistant's response
+    # 5. Get the final assistant message
+    assistant_content = result["messages"][-1].content
+
+    if isinstance(assistant_content, list):
+        assistant_response = ""
+
+        for item in assistant_content:
+            if isinstance(item, dict) and item.get("type") == "text":
+                assistant_response += item.get("text", "")
+    else:
+        assistant_response = str(assistant_content)
+
+    # 6. Save assistant response
     assistant_message = Message(
         conversation_id=conversation.id,
         role="assistant",
-        content=response,
+        content=assistant_response,
     )
 
     db.add(assistant_message)
@@ -81,13 +84,5 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
 
     # 7. Return the response
     return {
-        "response": response
+        "response": assistant_response
     }
-
-
-@router.get("/test-order/{order_id}")
-def test_order(
-    order_id: int,
-    db: Session = Depends(get_db),
-):
-    return get_order(order_id, db)
