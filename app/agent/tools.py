@@ -3,11 +3,12 @@ from sqlalchemy import select
 
 from app.db.database import SessionLocal
 from app.db.models import Order, User
+from app.services.retrieval import search_similar_chunks
 
 
 @tool
 def get_order(order_id: int):
-    """Get an order by its order ID."""
+    """Get the current status and details of a customer order by order ID."""
 
     db = SessionLocal()
 
@@ -25,13 +26,16 @@ def get_order(order_id: int):
             "product": order.product,
         }
 
+    except Exception as e:
+        return {"error": f"Failed to retrieve order: {str(e)}"}
+
     finally:
         db.close()
 
 
 @tool
 def get_customer(user_id: int):
-    """Get customer information by user ID."""
+    """Get a customer's name and email address by user ID."""
 
     db = SessionLocal()
 
@@ -48,13 +52,16 @@ def get_customer(user_id: int):
             "email": user.email,
         }
 
+    except Exception as e:
+        return {"error": f"Failed to retrieve customer: {str(e)}"}
+
     finally:
         db.close()
 
 
 @tool
 def get_refund_policy():
-    """Get the company's refund policy."""
+    """Get the company's official refund policy and eligibility period."""
 
     return {
         "policy": (
@@ -65,13 +72,11 @@ def get_refund_policy():
 
 @tool
 def search_knowledge(question: str):
-    """Search company documents for information relevant to the user's question."""
+    """Search the company's knowledge base for policies, procedures, shipping, refunds, and other support information."""
 
     db = SessionLocal()
 
     try:
-        from app.services.retrieval import search_similar_chunks
-
         chunks = search_similar_chunks(
             db=db,
             query=question,
@@ -79,9 +84,7 @@ def search_knowledge(question: str):
         )
 
         if not chunks:
-            return {
-                "error": "No relevant information found."
-            }
+            return {"error": "No relevant information found."}
 
         return {
             "results": [
@@ -92,6 +95,9 @@ def search_knowledge(question: str):
                 for chunk in chunks
             ]
         }
+
+    except Exception as e:
+        return {"error": f"Knowledge search failed: {str(e)}"}
 
     finally:
         db.close()
