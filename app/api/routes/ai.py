@@ -54,7 +54,7 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         db,
     )
 
-    if len(memory["old_messages"]) > 0:
+    if len(memory["old_messages"]) > 10:
         update_conversation_summary(
             conversation.id,
             db,
