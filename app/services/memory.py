@@ -2,14 +2,20 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from langchain_core.messages import HumanMessage, AIMessage
 
-from app.db.models import Message
+from app.db.models import Conversation, Message
 
 
-def load_conversation_messages(
+def load_conversation_memory(
     conversation_id: int,
     db: Session,
     limit: int = 10,
 ):
+    conversation = db.execute(
+        select(Conversation).where(
+            Conversation.id == conversation_id
+        )
+    ).scalar_one()
+
     statement = (
         select(Message)
         .where(Message.conversation_id == conversation_id)
@@ -24,9 +30,16 @@ def load_conversation_messages(
 
     for message in messages:
         if message.role == "user":
-            result.append(HumanMessage(content=message.content))
+            result.append(
+                HumanMessage(content=message.content)
+            )
 
         elif message.role == "assistant":
-            result.append(AIMessage(content=message.content))
+            result.append(
+                AIMessage(content=message.content)
+            )
 
-    return result
+    return {
+        "summary": conversation.summary,
+        "messages": result,
+    }

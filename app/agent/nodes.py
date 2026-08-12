@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import SystemMessage
 
 from app.agent.state import AgentState
 from app.agent.tools import (
@@ -34,7 +35,22 @@ llm_with_tools = llm.bind_tools(
 
 
 def call_llm(state: AgentState):
-    response = llm_with_tools.invoke(state["messages"])
+    messages = state["messages"]
+
+    if state["summary"]:
+        messages = [
+            SystemMessage(
+                content=f"""
+Here is a summary of the earlier conversation:
+
+{state["summary"]}
+
+Use this summary as additional context when answering the user.
+"""
+            )
+        ] + messages
+
+    response = llm_with_tools.invoke(messages)
 
     return {
         "messages": [response]

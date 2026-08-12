@@ -24,6 +24,10 @@ class Conversation(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    summary: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
 
     user: Mapped["User"] = relationship(
         back_populates="conversations"

@@ -6,6 +6,7 @@ from app.agent.graph import graph
 
 from app.db.database import get_db
 from app.db.models import Conversation, Message
+from app.services.memory import load_conversation_memory
 
 
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -45,18 +46,20 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # 3. Load conversation history
-    from app.services.memory import load_conversation_messages
-
-    messages = load_conversation_messages(
+    memory = load_conversation_memory(
         conversation.id,
         db,
     )
+
+    messages = memory["messages"]
+    summary = memory["summary"]
 
     # 4. Run LangGraph
     result = graph.invoke(
         {
             "messages": messages,
             "conversation_id": conversation.id,
+            "summary": summary,
         }
     )
 

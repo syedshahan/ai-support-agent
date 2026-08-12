@@ -22,8 +22,6 @@ def should_use_tools(state: AgentState):
 
 graph_builder = StateGraph(AgentState)
 
-graph_builder.add_node("llm", call_llm)
-
 tool_node = ToolNode(
     [
         get_order,
@@ -36,6 +34,8 @@ tool_node = ToolNode(
 graph_builder.add_node("tools", tool_node)
 
 graph_builder.add_edge(START, "llm")
+
+graph_builder.add_node("llm", call_llm)
 
 graph_builder.add_conditional_edges(
     "llm",
