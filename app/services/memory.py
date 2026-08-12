@@ -8,14 +8,17 @@ from app.db.models import Message
 def load_conversation_messages(
     conversation_id: int,
     db: Session,
+    limit: int = 10,
 ):
     statement = (
         select(Message)
         .where(Message.conversation_id == conversation_id)
-        .order_by(Message.id)
+        .order_by(Message.id.desc())
+        .limit(limit)
     )
 
     messages = db.execute(statement).scalars().all()
+    messages.reverse()
 
     result = []
 
