@@ -6,7 +6,10 @@ from app.agent.graph import graph
 
 from app.db.database import get_db
 from app.db.models import Conversation, Message
-from app.services.memory import load_conversation_memory
+from app.services.memory import (
+    load_conversation_memory,
+    update_conversation_summary,
+)
 
 
 router = APIRouter(prefix="/ai", tags=["AI"])
@@ -50,6 +53,18 @@ def chat(request: ChatRequest, db: Session = Depends(get_db)):
         conversation.id,
         db,
     )
+
+    if len(memory["old_messages"]) > 0:
+        update_conversation_summary(
+            conversation.id,
+            db,
+            memory["old_messages"],
+        )
+
+        memory = load_conversation_memory(
+            conversation.id,
+            db,
+        )
 
     messages = memory["messages"]
     summary = memory["summary"]

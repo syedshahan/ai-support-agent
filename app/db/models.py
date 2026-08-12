@@ -28,6 +28,9 @@ class Conversation(Base):
         Text,
         nullable=True,
     )
+    summary_through_id: Mapped[int | None] = mapped_column(
+        nullable=True
+    )
 
     user: Mapped["User"] = relationship(
         back_populates="conversations"

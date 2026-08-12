@@ -40,13 +40,11 @@ def call_llm(state: AgentState):
     if state["summary"]:
         messages = [
             SystemMessage(
-                content=f"""
-Here is a summary of the earlier conversation:
-
-{state["summary"]}
-
-Use this summary as additional context when answering the user.
-"""
+                content=(
+                    "Here is the summary of the earlier conversation. "
+                    "Use it as context when answering the user:\n\n"
+                    f"{state['summary']}"
+                )
             )
         ] + messages
 
